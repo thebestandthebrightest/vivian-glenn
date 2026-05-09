@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8f3ea;
-  --foreground: #48261d;
-  --page-background: #f8f3ea;
-  --atlas-parchment: #f8f3ea;
-  --atlas-chocolate: #48261d;
+  --background: #fcfbf7;
+  --foreground: #111111;
+  --page-background: #fcfbf7;
+  --atlas-parchment: #fcfbf7;
+  --atlas-chocolate: #111111;
   --atlas-sun: #f0cb2a;
   --font-editorial-serif:
     "Iowan Old Style", "Palatino Linotype", "Book Antiqua", "Cormorant Garamond",
