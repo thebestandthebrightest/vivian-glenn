@@ -9,7 +9,7 @@ export default function AboutPage() {
 
   return (
     <main className="min-h-[100svh] bg-[var(--atlas-parchment)] px-4 py-6 text-[var(--atlas-chocolate)] sm:px-6 lg:px-8">
-      <div className={`mx-auto max-w-6xl border bg-[rgba(251,248,241,0.88)] ${majorRule}`}>
+      <div className={`mx-auto max-w-6xl border bg-[rgba(252,251,247,0.9)] ${majorRule}`}>
         <header className={`grid gap-0 border-b lg:grid-cols-[minmax(0,1.15fr)_22rem] ${majorRule}`}>
           <div className="px-6 py-8 sm:px-8 sm:py-10">
             <div className="flex items-center justify-between gap-4">

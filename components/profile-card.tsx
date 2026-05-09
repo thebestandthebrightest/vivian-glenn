@@ -26,7 +26,7 @@ export function ProfileCard({
   return (
     <section
       aria-modal="true"
-      className={`max-h-[calc(100svh-1.5rem)] overflow-auto border border-[rgba(72,38,29,0.16)] bg-[rgba(251,248,241,0.98)] text-[var(--atlas-chocolate)] shadow-[0_18px_50px_rgba(72,38,29,0.08)] backdrop-blur-[10px] ${className}`}
+      className={`max-h-[calc(100svh-1.5rem)] overflow-auto border border-[rgba(17,17,17,0.16)] bg-[rgba(252,251,247,0.98)] text-[var(--atlas-chocolate)] shadow-[0_18px_50px_rgba(17,17,17,0.06)] backdrop-blur-[10px] ${className}`}
       role="dialog"
     >
       <div
