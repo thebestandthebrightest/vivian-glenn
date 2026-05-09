@@ -5,6 +5,7 @@ type TravelGlobeProps = {
   country: string;
   lat: number;
   lng: number;
+  neutral?: boolean;
 };
 
 function projectToGlobe(lat: number, lng: number) {
@@ -19,7 +20,13 @@ function projectToGlobe(lat: number, lng: number) {
   };
 }
 
-export function TravelGlobe({ city, country, lat, lng }: TravelGlobeProps) {
+export function TravelGlobe({
+  city,
+  country,
+  lat,
+  lng,
+  neutral = false,
+}: TravelGlobeProps) {
   const marker = projectToGlobe(lat, lng);
 
   return (
@@ -64,14 +71,23 @@ export function TravelGlobe({ city, country, lat, lng }: TravelGlobeProps) {
               stroke="rgba(17,17,17,0.12)"
               strokeWidth="1"
             />
-            <circle cx={marker.x} cy={marker.y} fill="var(--atlas-sun)" r="3.4" />
+            <circle
+              cx={neutral ? 50 : marker.x}
+              cy={neutral ? 50 : marker.y}
+              fill="var(--atlas-sun)"
+              r="3.4"
+            />
           </svg>
         </div>
         <div className="mt-3">
           <p className="font-[family-name:var(--font-editorial-serif)] text-[0.82rem] leading-5">
-            {city}
+            {neutral ? "Travel Archive" : city}
           </p>
-          {country ? (
+          {neutral ? (
+            <p className="mt-1 text-[0.62rem] uppercase leading-5 tracking-[0.2em]">
+              Hover or select a place
+            </p>
+          ) : country ? (
             <p className="mt-1 text-[0.62rem] uppercase leading-5 tracking-[0.2em]">
               {country}
             </p>

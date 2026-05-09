@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 
+import { StandaloneNav } from "@/components/standalone-nav";
 import { aboutExperience, aboutHighlights, skillGroups } from "@/lib/profile-content";
 
 export default function AboutPage() {
@@ -14,12 +14,7 @@ export default function AboutPage() {
           <div className="px-6 py-8 sm:px-8 sm:py-10">
             <div className="flex items-center justify-between gap-4">
               <p className="text-[0.7rem] uppercase tracking-[0.28em]">About</p>
-              <Link
-                className="text-[0.72rem] uppercase tracking-[0.18em] transition-opacity hover:opacity-65"
-                href="/"
-              >
-                Back Home
-              </Link>
+              <StandaloneNav />
             </div>
 
             <h1 className="mt-10 font-[family-name:var(--font-editorial-serif)] text-[clamp(2.8rem,8vw,5.6rem)] leading-[0.92] tracking-[0.08em]">

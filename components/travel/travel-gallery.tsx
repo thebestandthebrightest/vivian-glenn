@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { StandaloneNav } from "@/components/standalone-nav";
 import { travelPlaces, type TravelMediaItem, type TravelPlace } from "@/lib/travel-data";
 
 import { TravelGlobe } from "./travel-globe";
@@ -27,11 +27,14 @@ function buildLoopedPlaces(places: TravelPlace[]) {
   return Array.from({ length: LOOP_COPIES }, (_, loopIndex) =>
     places.map((place, orderIndex) => ({
       instanceId: `${loopIndex}-${place.id}`,
-      loopIndex,
       orderIndex,
       place,
     })),
   ).flat();
+}
+
+function modulo(value: number, base: number) {
+  return ((value % base) + base) % base;
 }
 
 function VideoFallback() {
@@ -73,6 +76,20 @@ function TravelMedia({
 }) {
   const [imageFailed, setImageFailed] = useState(false);
   const [videoPreviewFailed, setVideoPreviewFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (item.type !== "video") return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isSelected) {
+      void video.play().catch(() => {
+        /* autoplay can be blocked; muted loop will retry on interaction */
+      });
+    }
+  }, [isSelected, item.type]);
 
   if (item.type === "video") {
     if (videoPreviewFailed) {
@@ -81,14 +98,14 @@ function TravelMedia({
 
     return (
       <video
-        autoPlay={isSelected}
+        ref={videoRef}
+        autoPlay
         className="h-full w-full object-cover"
         loop
         muted
         onError={() => setVideoPreviewFailed(true)}
         playsInline
-        poster={item.posterSrc}
-        preload="metadata"
+        preload="auto"
       >
         <source src={item.src} type={getVideoMimeType(item.src)} />
       </video>
@@ -114,11 +131,11 @@ function TravelMedia({
 export function TravelGallery() {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
-  const currentTranslateRef = useRef(0);
-  const targetTranslateRef = useRef(0);
+  const virtualOffsetRef = useRef(0);
+  const currentOffsetRef = useRef(0);
   const segmentWidthRef = useRef(0);
   const animationFrameRef = useRef<number | null>(null);
-  const [selectedInstanceId, setSelectedInstanceId] = useState("1-amsterdam");
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [desktop, setDesktop] = useState(false);
   const [translateX, setTranslateX] = useState(0);
   const [entered, setEntered] = useState(false);
@@ -126,7 +143,9 @@ export function TravelGallery() {
   const orderedPlaces = useMemo(() => sortPlacesAlphabetically(travelPlaces), []);
   const loopedPlaces = useMemo(() => buildLoopedPlaces(orderedPlaces), [orderedPlaces]);
   const selectedEntry =
-    loopedPlaces.find((entry) => entry.instanceId === selectedInstanceId) ?? loopedPlaces[0] ?? null;
+    selectedInstanceId === null
+      ? null
+      : loopedPlaces.find((entry) => entry.instanceId === selectedInstanceId) ?? null;
   const selectedPlace = selectedEntry?.place ?? null;
 
   useEffect(() => {
@@ -140,8 +159,8 @@ export function TravelGallery() {
       setDesktop(nextDesktop);
 
       if (!nextDesktop) {
-        currentTranslateRef.current = 0;
-        targetTranslateRef.current = 0;
+        virtualOffsetRef.current = 0;
+        currentOffsetRef.current = 0;
         segmentWidthRef.current = 0;
         setTranslateX(0);
       }
@@ -159,33 +178,9 @@ export function TravelGallery() {
     const track = trackRef.current;
     if (!viewport || !track) return;
 
-    const normalizeTranslate = (value: number) => {
-      const segmentWidth = segmentWidthRef.current;
-      if (!segmentWidth) return value;
-
-      let nextValue = value;
-      while (nextValue > 0) {
-        nextValue -= segmentWidth;
-      }
-      while (nextValue <= -segmentWidth * 2) {
-        nextValue += segmentWidth;
-      }
-      return nextValue;
-    };
-
     const updateMetrics = () => {
       segmentWidthRef.current = track.scrollWidth / LOOP_COPIES;
-
-      if (segmentWidthRef.current > 0 && currentTranslateRef.current === 0) {
-        currentTranslateRef.current = -segmentWidthRef.current;
-        targetTranslateRef.current = -segmentWidthRef.current;
-        setTranslateX(-segmentWidthRef.current);
-        return;
-      }
-
-      currentTranslateRef.current = normalizeTranslate(currentTranslateRef.current);
-      targetTranslateRef.current = normalizeTranslate(targetTranslateRef.current);
-      setTranslateX(currentTranslateRef.current);
+      setTranslateX(-segmentWidthRef.current - modulo(currentOffsetRef.current, segmentWidthRef.current));
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -193,19 +188,18 @@ export function TravelGallery() {
 
       const dominantDelta =
         Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-      targetTranslateRef.current = normalizeTranslate(targetTranslateRef.current - dominantDelta * 0.34);
+      virtualOffsetRef.current += dominantDelta * 0.34;
     };
 
     const animate = () => {
-      currentTranslateRef.current +=
-        (targetTranslateRef.current - currentTranslateRef.current) * 0.06;
-      currentTranslateRef.current = normalizeTranslate(currentTranslateRef.current);
+      currentOffsetRef.current +=
+        (virtualOffsetRef.current - currentOffsetRef.current) * 0.06;
 
-      if (Math.abs(targetTranslateRef.current - currentTranslateRef.current) < 0.08) {
-        currentTranslateRef.current = normalizeTranslate(targetTranslateRef.current);
+      const segmentWidth = segmentWidthRef.current;
+      if (segmentWidth > 0) {
+        setTranslateX(-segmentWidth - modulo(currentOffsetRef.current, segmentWidth));
       }
 
-      setTranslateX(currentTranslateRef.current);
       animationFrameRef.current = window.requestAnimationFrame(animate);
     };
 
@@ -228,25 +222,19 @@ export function TravelGallery() {
 
   return (
     <>
-      {selectedPlace ? (
-        <TravelGlobe
-          city={selectedPlace.city}
-          country={selectedPlace.country}
-          lat={selectedPlace.lat}
-          lng={selectedPlace.lng}
-        />
-      ) : null}
+      <TravelGlobe
+        city={selectedPlace?.city ?? "Travel Archive"}
+        country={selectedPlace?.country ?? ""}
+        lat={selectedPlace?.lat ?? 0}
+        lng={selectedPlace?.lng ?? 0}
+        neutral={selectedPlace === null}
+      />
 
       <main className="flex h-[100svh] min-h-[100svh] flex-col overflow-hidden overscroll-none bg-[var(--atlas-parchment)] px-4 py-4 text-[var(--atlas-chocolate)] sm:px-6 lg:px-8">
         <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col">
           <header className="flex items-start justify-between gap-6 border-b border-[rgba(17,17,17,0.12)] pb-4">
             <p className="text-[0.68rem] uppercase tracking-[0.28em]">Travel / Gallery</p>
-            <Link
-              className="text-[0.72rem] uppercase tracking-[0.18em] transition-opacity hover:opacity-65"
-              href="/"
-            >
-              Back Home
-            </Link>
+            <StandaloneNav />
           </header>
 
           <section className="flex flex-1 items-center overflow-hidden py-6 lg:py-8">
@@ -283,7 +271,7 @@ export function TravelGallery() {
                           width: TILE_WIDTH,
                           height:
                             TILE_HEIGHT + extraMedia.length * (STACK_HEIGHT + STACK_GAP) + 18,
-                          opacity: selectedInstanceId === instanceId || !selectedPlace ? 1 : 0.78,
+                          opacity: selectedInstanceId === null || isSelected ? 1 : 0.78,
                           transform: entered ? "translate3d(0, 0, 0)" : "translate3d(0, 18px, 0)",
                           transition: `opacity ${TRANSITION}, transform ${TRANSITION}`,
                           transitionDelay: entered

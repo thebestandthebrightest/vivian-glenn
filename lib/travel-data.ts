@@ -30,8 +30,8 @@ export const travelPlaces: TravelPlace[] = [
   {
     id: "antigua",
     city: "Antigua",
-    country: "",
-    label: "Antigua",
+    country: "Caribbean",
+    label: "Antigua, Caribbean",
     lat: 17.1274,
     lng: -61.8468,
     media: [{ id: "antigua-1", src: "/travel/antigua.png", type: "image" }],
