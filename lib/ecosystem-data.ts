@@ -1,6 +1,7 @@
 export type EcosystemNodeBlueprint = {
   id: string;
   label: string;
+  href?: string;
   homeX: number;
   homeY: number;
   mobileHomeX?: number;
@@ -19,6 +20,7 @@ export const ecosystemNodes: EcosystemNodeBlueprint[] = [
   {
     id: "travel",
     label: "Travel",
+    href: "/travel",
     homeX: 0.56,
     homeY: 0.17,
     mobileHomeX: 0.62,

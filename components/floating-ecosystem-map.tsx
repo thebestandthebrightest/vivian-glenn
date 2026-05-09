@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -334,6 +335,7 @@ export function FloatingEcosystemMap({
 }: {
   protectedZones: ProtectedZone[];
 }) {
+  const router = useRouter();
   const { ref: stageRef, size } = useElementSize<HTMLDivElement>();
   const [scene, setScene] = useState<SceneSnapshot | null>(null);
   const hubRef = useRef<HubState | null>(null);
@@ -854,6 +856,7 @@ export function FloatingEcosystemMap({
 
           {scene.nodes.map((node) => {
             const isActive = activeTarget === null || activeTarget === node.id;
+            const nodeHref = visibleBlueprints.find((blueprint) => blueprint.id === node.id)?.href;
             const labelTransform =
               node.labelSide === "left"
                 ? "translate(-100%, -50%)"
@@ -879,7 +882,15 @@ export function FloatingEcosystemMap({
                 key={node.id}
                 className="absolute z-10"
                 onBlur={() => setHoveredNode((current) => (current === node.id ? null : current))}
-                onClick={closeProfile}
+                onClick={() => {
+                  if (nodeHref) {
+                    closeProfile();
+                    router.push(nodeHref);
+                    return;
+                  }
+
+                  closeProfile();
+                }}
                 onFocus={() => setHoveredNode(node.id)}
                 onMouseEnter={() => setHoveredNode(node.id)}
                 onMouseLeave={() => setHoveredNode((current) => (current === node.id ? null : current))}
