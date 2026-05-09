@@ -7,22 +7,31 @@ import { travelPlaces, type TravelMediaItem, type TravelPlace } from "@/lib/trav
 
 import { TravelGlobe } from "./travel-globe";
 
-const TILE_WIDTH = 186;
-const TILE_HEIGHT = 254;
-const STACK_WIDTH = 176;
-const STACK_HEIGHT = 236;
+const TILE_WIDTH = 188;
+const TILE_HEIGHT = 250;
+const STACK_WIDTH = 178;
+const STACK_HEIGHT = 238;
+const STACK_GAP = 18;
+const LOOP_COPIES = 3;
 const TRANSITION = "620ms cubic-bezier(0.22, 1, 0.36, 1)";
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function isMovSource(src: string) {
-  return src.toLowerCase().endsWith(".mov");
+function getVideoMimeType(src: string) {
+  return src.toLowerCase().endsWith(".mp4") ? "video/mp4" : "video/quicktime";
 }
 
 function sortPlacesAlphabetically(places: TravelPlace[]) {
   return [...places].sort((first, second) => first.city.localeCompare(second.city));
+}
+
+function buildLoopedPlaces(places: TravelPlace[]) {
+  return Array.from({ length: LOOP_COPIES }, (_, loopIndex) =>
+    places.map((place, orderIndex) => ({
+      instanceId: `${loopIndex}-${place.id}`,
+      loopIndex,
+      orderIndex,
+      place,
+    })),
+  ).flat();
 }
 
 function VideoFallback() {
@@ -65,7 +74,7 @@ function TravelMedia({
   const [imageFailed, setImageFailed] = useState(false);
   const [videoPreviewFailed, setVideoPreviewFailed] = useState(false);
 
-  if (item.type === "video" || isMovSource(item.src)) {
+  if (item.type === "video") {
     if (videoPreviewFailed) {
       return <VideoFallback />;
     }
@@ -79,9 +88,9 @@ function TravelMedia({
         onError={() => setVideoPreviewFailed(true)}
         playsInline
         poster={item.posterSrc}
-        preload={isSelected || priority ? "auto" : "metadata"}
+        preload="metadata"
       >
-        <source src={item.src} type="video/quicktime" />
+        <source src={item.src} type={getVideoMimeType(item.src)} />
       </video>
     );
   }
@@ -107,15 +116,23 @@ export function TravelGallery() {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const currentTranslateRef = useRef(0);
   const targetTranslateRef = useRef(0);
-  const maxOffsetRef = useRef(0);
+  const segmentWidthRef = useRef(0);
   const animationFrameRef = useRef<number | null>(null);
-  const [selectedId, setSelectedId] = useState("amsterdam");
+  const [selectedInstanceId, setSelectedInstanceId] = useState("1-amsterdam");
   const [desktop, setDesktop] = useState(false);
   const [translateX, setTranslateX] = useState(0);
+  const [entered, setEntered] = useState(false);
 
   const orderedPlaces = useMemo(() => sortPlacesAlphabetically(travelPlaces), []);
-  const selectedPlace =
-    orderedPlaces.find((place) => place.id === selectedId) ?? orderedPlaces[0] ?? null;
+  const loopedPlaces = useMemo(() => buildLoopedPlaces(orderedPlaces), [orderedPlaces]);
+  const selectedEntry =
+    loopedPlaces.find((entry) => entry.instanceId === selectedInstanceId) ?? loopedPlaces[0] ?? null;
+  const selectedPlace = selectedEntry?.place ?? null;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setEntered(true), 40);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     function updateMode() {
@@ -125,7 +142,7 @@ export function TravelGallery() {
       if (!nextDesktop) {
         currentTranslateRef.current = 0;
         targetTranslateRef.current = 0;
-        maxOffsetRef.current = 0;
+        segmentWidthRef.current = 0;
         setTranslateX(0);
       }
     }
@@ -142,10 +159,33 @@ export function TravelGallery() {
     const track = trackRef.current;
     if (!viewport || !track) return;
 
+    const normalizeTranslate = (value: number) => {
+      const segmentWidth = segmentWidthRef.current;
+      if (!segmentWidth) return value;
+
+      let nextValue = value;
+      while (nextValue > 0) {
+        nextValue -= segmentWidth;
+      }
+      while (nextValue <= -segmentWidth * 2) {
+        nextValue += segmentWidth;
+      }
+      return nextValue;
+    };
+
     const updateMetrics = () => {
-      maxOffsetRef.current = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      targetTranslateRef.current = clamp(targetTranslateRef.current, -maxOffsetRef.current, 0);
-      currentTranslateRef.current = clamp(currentTranslateRef.current, -maxOffsetRef.current, 0);
+      segmentWidthRef.current = track.scrollWidth / LOOP_COPIES;
+
+      if (segmentWidthRef.current > 0 && currentTranslateRef.current === 0) {
+        currentTranslateRef.current = -segmentWidthRef.current;
+        targetTranslateRef.current = -segmentWidthRef.current;
+        setTranslateX(-segmentWidthRef.current);
+        return;
+      }
+
+      currentTranslateRef.current = normalizeTranslate(currentTranslateRef.current);
+      targetTranslateRef.current = normalizeTranslate(targetTranslateRef.current);
+      setTranslateX(currentTranslateRef.current);
     };
 
     const handleWheel = (event: WheelEvent) => {
@@ -153,19 +193,16 @@ export function TravelGallery() {
 
       const dominantDelta =
         Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-      targetTranslateRef.current = clamp(
-        targetTranslateRef.current - dominantDelta * 0.58,
-        -maxOffsetRef.current,
-        0,
-      );
+      targetTranslateRef.current = normalizeTranslate(targetTranslateRef.current - dominantDelta * 0.34);
     };
 
     const animate = () => {
       currentTranslateRef.current +=
-        (targetTranslateRef.current - currentTranslateRef.current) * 0.075;
+        (targetTranslateRef.current - currentTranslateRef.current) * 0.06;
+      currentTranslateRef.current = normalizeTranslate(currentTranslateRef.current);
 
       if (Math.abs(targetTranslateRef.current - currentTranslateRef.current) < 0.08) {
-        currentTranslateRef.current = targetTranslateRef.current;
+        currentTranslateRef.current = normalizeTranslate(targetTranslateRef.current);
       }
 
       setTranslateX(currentTranslateRef.current);
@@ -187,7 +224,7 @@ export function TravelGallery() {
         window.cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [desktop, orderedPlaces.length, selectedId]);
+  }, [desktop, loopedPlaces.length]);
 
   return (
     <>
@@ -214,7 +251,7 @@ export function TravelGallery() {
 
           <section className="flex flex-1 items-center overflow-hidden py-6 lg:py-8">
             <div
-              className="w-full overflow-x-auto overflow-y-hidden pb-2 lg:overflow-hidden"
+              className="w-full overflow-x-auto overflow-y-hidden pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-hidden"
               ref={viewportRef}
             >
               <div
@@ -225,27 +262,33 @@ export function TravelGallery() {
                   willChange: desktop ? "transform" : undefined,
                 }}
               >
-                {orderedPlaces.map((place, index) => {
-                  const isSelected = selectedId === place.id;
+                {loopedPlaces.map((entry, index) => {
+                  const { instanceId, orderIndex, place } = entry;
+                  const isSelected = selectedInstanceId === instanceId;
                   const primaryMedia = place.media[0];
                   const extraMedia = place.media.slice(1);
 
                   return (
                     <button
-                      key={place.id}
+                      key={instanceId}
                       className="group flex shrink-0 flex-col items-start bg-transparent text-left"
-                      onClick={() => setSelectedId(place.id)}
-                      onFocus={() => setSelectedId(place.id)}
-                      onMouseEnter={() => setSelectedId(place.id)}
+                      onClick={() => setSelectedInstanceId(instanceId)}
+                      onFocus={() => setSelectedInstanceId(instanceId)}
+                      onMouseEnter={() => setSelectedInstanceId(instanceId)}
                       type="button"
                     >
                       <div
                         className="relative"
                         style={{
                           width: TILE_WIDTH,
-                          height: TILE_HEIGHT + extraMedia.length * (STACK_HEIGHT + 18) + 22,
-                          opacity: selectedId === place.id || !selectedPlace ? 1 : 0.74,
-                          transition: `opacity ${TRANSITION}`,
+                          height:
+                            TILE_HEIGHT + extraMedia.length * (STACK_HEIGHT + STACK_GAP) + 18,
+                          opacity: selectedInstanceId === instanceId || !selectedPlace ? 1 : 0.78,
+                          transform: entered ? "translate3d(0, 0, 0)" : "translate3d(0, 18px, 0)",
+                          transition: `opacity ${TRANSITION}, transform ${TRANSITION}`,
+                          transitionDelay: entered
+                            ? `${Math.min(orderIndex, 8) * 28}ms`
+                            : "0ms",
                         }}
                       >
                         {extraMedia.map((item, extraIndex) => (
@@ -257,8 +300,8 @@ export function TravelGallery() {
                               height: STACK_HEIGHT,
                               opacity: isSelected ? 1 : 0,
                               transform: isSelected
-                                ? `translate3d(-50%, ${extraIndex * (STACK_HEIGHT + 18)}px, 0)`
-                                : "translate3d(-50%, 24px, 0)",
+                                ? `translate3d(-50%, ${extraIndex * (STACK_HEIGHT + STACK_GAP)}px, 0)`
+                                : "translate3d(-50%, 28px, 0)",
                               transition: `opacity ${TRANSITION}, transform ${TRANSITION}`,
                               pointerEvents: "none",
                             }}
@@ -285,7 +328,7 @@ export function TravelGallery() {
                             alt={place.label}
                             isSelected={isSelected}
                             item={primaryMedia}
-                            priority={index < 3}
+                            priority={index < orderedPlaces.length}
                           />
                         </div>
                       </div>
