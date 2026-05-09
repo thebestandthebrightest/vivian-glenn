@@ -34,7 +34,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Budapest, Hungary",
     lat: 47.4979,
     lng: 19.0402,
-    media: [{ id: "budapest-1", src: "/travel/budapest.HEIC", type: "image" }],
+    media: [{ id: "budapest-1", src: "/travel/budapest.png", type: "image" }],
   },
   {
     id: "vienna",
@@ -43,7 +43,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Vienna, Austria",
     lat: 48.2082,
     lng: 16.3738,
-    media: [{ id: "vienna-1", src: "/travel/vienna.HEIC", type: "image" }],
+    media: [{ id: "vienna-1", src: "/travel/vienna.png", type: "image" }],
   },
   {
     id: "dublin",
@@ -52,7 +52,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Dublin, Ireland",
     lat: 53.3498,
     lng: -6.2603,
-    media: [{ id: "dublin-1", src: "/travel/dublin.HEIC", type: "image" }],
+    media: [{ id: "dublin-1", src: "/travel/6.png", type: "image" }],
   },
   {
     id: "copenhagen",
@@ -91,7 +91,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Chicago, United States",
     lat: 41.8781,
     lng: -87.6298,
-    media: [{ id: "chicago-1", src: "/travel/chicago.HEIC", type: "image" }],
+    media: [{ id: "chicago-1", src: "/travel/chicago.png", type: "image" }],
   },
   {
     id: "malmo",
@@ -100,7 +100,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Malmö, Sweden",
     lat: 55.605,
     lng: 13.0038,
-    media: [{ id: "malmo-1", src: "/travel/malmo.HEIC", type: "image" }],
+    media: [{ id: "malmo-1", src: "/travel/malmo.png", type: "image" }],
   },
   {
     id: "morocco",
@@ -111,7 +111,7 @@ export const travelPlaces: TravelPlace[] = [
     lng: -7.0926,
     media: [
       { id: "morocco-1", src: "/travel/morroco-1.JPG", type: "image" },
-      { id: "morocco-2", src: "/travel/morocco-2.HEIC", type: "image" },
+      { id: "morocco-2", src: "/travel/morocco-2.png", type: "image" },
     ],
   },
   {
@@ -130,7 +130,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Amsterdam, Netherlands",
     lat: 52.3676,
     lng: 4.9041,
-    media: [{ id: "amsterdam-1", src: "/travel/amsterdam.HEIC", type: "image" }],
+    media: [{ id: "amsterdam-1", src: "/travel/amsterdam.png", type: "image" }],
   },
   {
     id: "london",
@@ -152,7 +152,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Prague, Czech Republic",
     lat: 50.0755,
     lng: 14.4378,
-    media: [{ id: "prague-1", src: "/travel/prague.HEIC", type: "image" }],
+    media: [{ id: "prague-1", src: "/travel/prague.png", type: "image" }],
   },
   {
     id: "providence",
@@ -161,7 +161,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Providence, United States",
     lat: 41.824,
     lng: -71.4128,
-    media: [{ id: "providence-1", src: "/travel/providence.HEIC", type: "image" }],
+    media: [{ id: "providence-1", src: "/travel/providence.png", type: "image" }],
   },
   {
     id: "brussels",
@@ -170,7 +170,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Brussels, Belgium",
     lat: 50.8503,
     lng: 4.3517,
-    media: [{ id: "brussels-1", src: "/travel/bruseels.HEIC", type: "image" }],
+    media: [{ id: "brussels-1", src: "/travel/brussels.png", type: "image" }],
   },
   {
     id: "munich",
@@ -188,7 +188,7 @@ export const travelPlaces: TravelPlace[] = [
     label: "Boston, United States",
     lat: 42.3601,
     lng: -71.0589,
-    media: [{ id: "boston-1", src: "/travel/boston.HEIC", type: "image" }],
+    media: [{ id: "boston-1", src: "/travel/boston.png", type: "image" }],
   },
   {
     id: "new-york-city",
@@ -216,17 +216,18 @@ export const travelPlaces: TravelPlace[] = [
     lat: 20.7984,
     lng: -156.3319,
     media: [
-      {
-        id: "hawaii-1",
-        src: "/travel/hawaii-1.MOV",
-        type: "video",
-      },
-      {
-        id: "hawaii-2",
-        src: "/travel/hawaii-2.MOV",
-        type: "video",
-      },
+      { id: "hawaii-1", src: "/travel/hawaii-1.MOV", type: "video" },
+      { id: "hawaii-2", src: "/travel/hawaii-2.MOV", type: "video" },
     ],
+  },
+  {
+    id: "seven-sisters",
+    city: "Seven Sisters",
+    country: "England",
+    label: "Seven Sisters, England",
+    lat: 50.7466,
+    lng: 0.1856,
+    media: [{ id: "seven-sisters-1", src: "/travel/seven sisters.JPG", type: "image" }],
   },
   {
     id: "antigua",

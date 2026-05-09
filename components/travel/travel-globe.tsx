@@ -22,7 +22,7 @@ export function TravelGlobe({ lat, lng, label }: TravelGlobeProps) {
   const marker = projectToGlobe(lat, lng);
 
   return (
-    <aside className="pointer-events-none fixed bottom-5 right-5 z-20 hidden text-[var(--atlas-chocolate)] md:block lg:bottom-8 lg:right-8">
+    <aside className="pointer-events-none fixed right-5 top-5 z-20 hidden text-[var(--atlas-chocolate)] md:block lg:right-8 lg:top-8">
       <div className="border border-[rgba(72,38,29,0.12)] bg-[rgba(251,248,241,0.9)] px-4 py-3 backdrop-blur-[2px]">
         <p className="text-[0.62rem] uppercase tracking-[0.28em]">Travel Marker</p>
         <motion.div
